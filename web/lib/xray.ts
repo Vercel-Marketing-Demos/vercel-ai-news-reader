@@ -114,7 +114,7 @@ export const parts = {
 
 // The repo, and a link that copies it into your GitHub and deploys it as a new Vercel project with a
 // Neon database. Nothing to fill in. The README's Deploy button is the same link.
-export const REPO = "https://github.com/buildswithcoffee/vercel-ai-news-reader";
+export const REPO = "https://github.com/Vercel-Marketing-Demos/vercel-ai-news-reader";
 export const DEPLOY = `https://vercel.com/new/clone?${new URLSearchParams({
   "repository-url": REPO,
   "project-name": "signal",
