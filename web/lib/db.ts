@@ -80,10 +80,12 @@ export async function saveProfile({ about, topics }: Profile) {
   return Boolean(row.changed);
 }
 
+// Grouped by kind, with Vercel's own sources first in theirs, then by name.
 export async function getSources(): Promise<Source[]> {
   return (await sql`
     select name, kind, url, enabled from feeds
-    order by array_position(array['News', 'AI labs', 'Platforms', 'Writers'], kind), name
+    order by array_position(array['News', 'AI labs', 'Platforms', 'Writers'], kind),
+      array_position(array['Vercel', 'Next.js'], name) nulls last, name
   `) as Source[];
 }
 
