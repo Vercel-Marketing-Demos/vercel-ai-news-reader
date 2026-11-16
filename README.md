@@ -11,11 +11,11 @@
 </p>
 
 <p align="center">
-  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuildswithcoffee%2Fvercel-ai-news-reader&project-name=signal&repository-name=signal&env=PROFILE_EDIT_KEY&envDescription=Your%20owner%20key%3A%20any%20password%20of%2032%2B%20characters.%20You%27ll%20use%20it%20to%20sign%20in%20to%20your%20Signal.&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D"><img src="https://vercel.com/button" alt="Deploy with Vercel" /></a>
+  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuildswithcoffee%2Fvercel-ai-news-reader&amp;project-name=signal&amp;repository-name=signal&amp;stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D"><img src="https://vercel.com/button" alt="Deploy with Vercel" /></a>
 </p>
 
 <p align="center">
-  <sub>About 2 minutes. You bring a Vercel account; the database is created for you.</sub>
+  <sub>Nothing to fill in: bring a Vercel account, and the repo and database are created for you.</sub>
 </p>
 
 <br />
@@ -90,22 +90,21 @@ flowchart LR
 
 ## After you deploy
 
-1. **Sign in** with the `PROFILE_EDIT_KEY` you chose.
-2. **Open Setup** and say what you care about, in a sentence or two, and pick your sources.
-3. **Give it a few minutes.** The scorer picks up new stories every 15 minutes, and scores the recent ones as soon as you save.
+1. **Press Visit.** Your Signal starts with a few interests and the main sources on, and scans the news as soon as it's up, so the first stories arrive within minutes.
+2. **Open Setup** to make it yours: say what you care about, in a sentence or two, and pick your sources.
+3. **Build on it.** X-ray's "Make it your own" tab has three feature ideas, each with a prompt for your coding agent.
 
-### Private, or shared
+### Sharing, and what it costs you
 
-Your Signal is **private by default**: every page and Ask Signal ask for your key. To share it, so anyone with the link can read your feed and chat, create a `public-access` flag and turn it on:
+There's no sign-in: anyone with your Signal's link can read it, change Setup and chat with Ask Signal, and **what they do is charged to your Vercel account**. To share Signal, show people the QR code in X-ray's Share tab, so they deploy their own.
+
+Setup shows the AI credits you have left. To cap what your Signal can spend, set an [AI Gateway budget](https://vercel.com/docs/ai-gateway/observability-and-spend/budgets) for the project:
 
 ```bash
-vercel flags create public-access --kind boolean --default-variant false --environment-variant production=true
+vercel ai-gateway budgets set project signal --amount 10 --refresh-period monthly
 ```
 
-Turn it off again in the Vercel dashboard, under **Flags**, with no redeploy. Setup stays yours either way.
-
-> [!TIP]
-> Deploying to a team? Everyone shares one feed, tuned to whoever set it up. For a feed of your own, deploy to your own account.
+To keep it to yourself or your team, turn on [Vercel Authentication](https://vercel.com/docs/deployment-protection) for the project.
 
 <details>
 <summary><strong>What it costs</strong></summary>
@@ -114,7 +113,7 @@ Turn it off again in the Vercel dashboard, under **Flags**, with no redeploy. Se
 Signal runs on your Vercel account, and its AI calls are billed to your AI Gateway credits.
 
 - **Scoring** runs around the clock. Only stories that pass the embedding filter go to the LLM, and it's Haiku, the smallest model.
-- **Ask Signal** uses Sonnet, and each conversation stops at $0.50. When your Signal is shared, anyone with the link chats on your credits.
+- **Ask Signal** uses Sonnet. Each conversation stops at $0.50, and no more than 30 start each day. Anyone with the link chats on your credits.
 
 </details>
 
@@ -170,5 +169,5 @@ pnpm --dir web test
 <br />
 
 <p align="center">
-  <sub>Built on <a href="https://vercel.com">Vercel</a>. See <a href="SECURITY.md">SECURITY.md</a> for how sign-in, spending limits and page reading are secured.</sub>
+  <sub>Built on <a href="https://vercel.com">Vercel</a>. See <a href="SECURITY.md">SECURITY.md</a> for how spending and page reading are kept safe.</sub>
 </p>

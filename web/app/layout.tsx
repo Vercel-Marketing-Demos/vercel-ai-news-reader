@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
-import { countOpenFollowUps, isOwner } from "@/lib/db";
-import { followUpsFlag, publicAccessFlag } from "@/flags";
+import { countOpenFollowUps } from "@/lib/db";
+import { followUpsFlag } from "@/flags";
 import { Guide } from "./guide";
 import { getTheme } from "./theme";
 import "./globals.css";
@@ -29,8 +29,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // Ask Signal follows the same rule as the pages: the owner, or anyone when Signal is public.
-  const chat = (await isOwner()) || (await publicAccessFlag());
   return (
     <html
       lang="en"
@@ -38,7 +36,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Guide chat={chat}>
+        <Guide>
         <header className="border-b border-line">
           <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-medium tracking-tight">
@@ -79,9 +77,9 @@ function Mark() {
   );
 }
 
-// Shown when the follow-ups flag is on and you're signed in, with how many are still open.
+// Shown when the follow-ups flag is on, with how many are still open.
 async function FollowUpsLink() {
-  if (!(await isOwner()) || !(await followUpsFlag())) return null;
+  if (!(await followUpsFlag())) return null;
   const open = await countOpenFollowUps();
   return (
     <Link href="/follow-ups" className="hover:text-foreground">

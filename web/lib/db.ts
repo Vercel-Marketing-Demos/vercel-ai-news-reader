@@ -1,14 +1,10 @@
 import "server-only";
-import { cookies } from "next/headers";
-import { OWNER_COOKIE, isOwnerSession } from "./profile-owner";
 import { neon } from "@neondatabase/serverless";
 
+// Every Signal belongs to whoever deployed it, and anyone with its link can use all of it, so there's
+// no sign-in. What the data layer still guards is cost: interest changes are limited to one every
+// 15 minutes, and Ask Signal to a number of conversations a day (agent/channels/eve.ts).
 const sql = neon(process.env.DATABASE_URL!);
-
-// Signed in with PROFILE_EDIT_KEY on this browser. Checked here, at the data, not only in the proxy.
-export async function isOwner() {
-  return isOwnerSession((await cookies()).get(OWNER_COOKIE)?.value);
-}
 
 export type Profile = { about: string; topics: string[] };
 
@@ -46,10 +42,6 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function saveProfile({ about, topics }: Profile) {
-  // Server Actions are public endpoints; never rely on the page's proxy alone.
-  if (!(await isOwner())) {
-    throw new Error("Unauthorized");
-  }
   about = about.trim();
   topics = [...new Set(topics)].sort();
   if (!about || about.length > 2000 || topics.length > 10 ||
@@ -91,7 +83,6 @@ export async function getSources(): Promise<Source[]> {
 
 // Turns on exactly these sources and turns off the rest.
 export async function setEnabledSources(names: string[]) {
-  if (!(await isOwner())) throw new Error("Unauthorized");
   if (names.length > 100) throw new Error("Invalid sources");
   await sql`update feeds set enabled = (name = any(${names}))`;
 }
@@ -106,18 +97,13 @@ const HEADLINE_ONLY_CHARS = 1000;
 
 // The filter is "no-match" or a topic; null shows everything.
 export async function getFeed(sort: Sort, filter: string | null): Promise<FeedItem[]> {
-  const owner = await isOwner();
-  // Do not let anonymous callers guess saved interests through filtered results.
-  // Enforce this here, not just in the page's list of filter chips.
-  if (!owner && filter !== "no-match") filter = null;
-
   // Relevance ranks the past week by score. Stories without one come last.
   const rows = await sql`
     select a.id, a.url, a.title, a.source, a.published_at, s.score, s.why, s.detail,
       a.read_at is null and length(a.text) < ${HEADLINE_ONLY_CHARS} as "headlineOnly",
       case when c.id is null then null else json_build_object('source', c.source, 'url', c.url) end as coverage,
       case when s.article_id is null then 'pending' when s.score is null then 'no-match' else 'scored' end as status,
-      case when ${owner} then coalesce(s.topics, '{}') else '{}'::text[] end as topics,
+      coalesce(s.topics, '{}') as topics,
       coalesce(s.takeaways, '{}') as takeaways, coalesce(s.reading, '[]') as reading,
       a.image, a.description, a.author, left(a.text, ${EXCERPT_CHARS}) as excerpt
     from articles a
@@ -129,17 +115,15 @@ export async function getFeed(sort: Sort, filter: string | null): Promise<FeedIt
       and (${sort} = 'latest' or a.published_at > now() - interval '7 days')
       and (${filter}::text is null
         or (${filter} = 'no-match' and s.article_id is not null and s.score is null)
-        or (${owner} and ${filter} = any(s.topics)))
+        or ${filter} = any(s.topics))
     order by case when ${sort} = 'relevance' then s.score end desc nulls last, a.published_at desc
     limit 50
   `;
   return rows as FeedItem[];
 }
 
-// These are exact saved profile labels, even though they are stored on scored stories.
-// Only the owner may enumerate them; anonymous feeds retain All / No match filters.
+// The interests that matched a story this week, for the feed's filter chips.
 export async function getFeedTopics(): Promise<string[]> {
-  if (!(await isOwner())) return [];
   const rows = await sql`
     select distinct unnest(s.topics) as topic
     from scores s
@@ -152,13 +136,7 @@ export async function getFeedTopics(): Promise<string[]> {
 
 export type FollowUp = { id: string; task: string; done: boolean; title: string; url: string; source: string };
 
-// Follow-ups are the owner's, like the profile: every read and write checks the session here.
-async function ownerOnly() {
-  if (!(await isOwner())) throw new Error("Unauthorized");
-}
-
 export async function getFollowUps(): Promise<FollowUp[]> {
-  await ownerOnly();
   return (await sql`
     select f.id::text, f.task, f.done, a.title, a.url, a.source
     from follow_ups f join articles a on a.id = f.article_id
@@ -167,13 +145,11 @@ export async function getFollowUps(): Promise<FollowUp[]> {
 }
 
 export async function countOpenFollowUps(): Promise<number> {
-  await ownerOnly();
   const [row] = await sql`select count(*)::int as open from follow_ups where not done`;
   return row.open;
 }
 
 export async function addFollowUp(articleId: string, task: string) {
-  await ownerOnly();
   task = task.trim();
   if (!task || task.length > 200) throw new Error("Invalid follow-up");
   // A cap keeps one person's list, and the table, a reasonable size.
@@ -184,11 +160,9 @@ export async function addFollowUp(articleId: string, task: string) {
 }
 
 export async function setFollowUpDone(id: string, done: boolean) {
-  await ownerOnly();
   await sql`update follow_ups set done = ${done} where id = ${id}::bigint`;
 }
 
 export async function deleteFollowUp(id: string) {
-  await ownerOnly();
   await sql`delete from follow_ups where id = ${id}::bigint`;
 }

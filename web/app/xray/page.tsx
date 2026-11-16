@@ -339,19 +339,15 @@ function OwnSlide() {
       </div>
 
       <p className="mt-8 max-w-3xl text-sm text-muted">
-        Your Signal stays yours: your{" "}
-        <a href={parts.env.href} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
-          PROFILE_EDIT_KEY
-        </a>{" "}
-        is its password, and it stays private until you turn on the{" "}
-        <a href={parts.flags.href} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
-          public-access flag
+        Anyone with your link can use your Signal, on your account. Cap what it spends with an{" "}
+        <a href={parts.budgets.href} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
+          AI Gateway budget
         </a>
-        . On a team,{" "}
+        , and keep it to yourself or your team with{" "}
         <a href={parts.protection.href} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
           Vercel Authentication
-        </a>{" "}
-        can guard the whole app too.
+        </a>
+        .
       </p>
     </div>
   );
@@ -361,9 +357,9 @@ function OwnSlide() {
 // public/share-qr.svg encodes REPO; regenerate it with `pnpm dlx qrcode -t svg -o public/share-qr.svg <url>`.
 function ShareSlide() {
   const steps = [
-    "Press Deploy. Vercel copies the repo into your GitHub account, creates a Vercel project for it, and sets up a Neon database.",
-    "When it asks, choose a PROFILE_EDIT_KEY: any password of 32 or more characters. It's how you sign in.",
-    "Open your new Signal, sign in, and pick your interests and sources in Setup. Stories arrive within 15 minutes.",
+    "Press Deploy. Vercel copies the repo into your GitHub account, creates a Vercel project for it, and sets up a Neon database. There's nothing to fill in.",
+    "When the build finishes, press Visit. Your Signal starts with a few interests, so the first stories arrive within minutes.",
+    "Make it yours in Setup: say what you care about and pick your sources. Anyone with your link can use it on your account, so share this QR code instead.",
   ];
   return (
     <div className="page-column grid grid-cols-[minmax(0,1fr)] items-center gap-10 rounded-xl border border-line p-6 sm:p-10 lg:grid-cols-[auto_minmax(0,1fr)]">

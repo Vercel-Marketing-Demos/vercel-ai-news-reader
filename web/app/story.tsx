@@ -26,7 +26,7 @@ async function followUp(formData: FormData) {
   refresh();
 }
 
-// `followUps`: show the follow-up action. The page passes it when the flag is on and you're signed in.
+// `followUps`: show the follow-up action. The page passes it when the flag is on.
 export function Story({ item, followUps = false, size = "row" }: { item: FeedItem; followUps?: boolean; size?: StorySize }) {
   const hasMore = Boolean(item.detail) || item.takeaways.length > 0;
   const clamp = { lead: "", card: "line-clamp-3", row: "line-clamp-2" }[size];
