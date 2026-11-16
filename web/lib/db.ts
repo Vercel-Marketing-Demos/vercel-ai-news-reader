@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { neon } from "@neondatabase/serverless";
 
 // Every Signal belongs to whoever deployed it, and anyone with its link can use all of it, so there's
@@ -36,10 +37,12 @@ export type FeedItem = {
   coverage: { source: string; url: string } | null; // another source's story Signal read instead
 };
 
-export async function getProfile(): Promise<Profile | null> {
+// Null until you've said what you care about: then Signal opens on Setup to ask. Cached per request,
+// since Setup's layout and its page both read it.
+export const getProfile = cache(async (): Promise<Profile | null> => {
   const [row] = await sql`select about, topics from profile`;
   return (row as Profile) ?? null;
-}
+});
 
 export async function saveProfile({ about, topics }: Profile) {
   about = about.trim();
@@ -81,10 +84,9 @@ export async function getSources(): Promise<Source[]> {
   `) as Source[];
 }
 
-// Turns on exactly these sources and turns off the rest.
-export async function setEnabledSources(names: string[]) {
-  if (names.length > 100) throw new Error("Invalid sources");
-  await sql`update feeds set enabled = (name = any(${names}))`;
+// Turns one source on or off. The feed follows right away; the scorer reads it on its next scan.
+export async function setSourceEnabled(name: string, enabled: boolean) {
+  await sql`update feeds set enabled = ${enabled} where name = ${name}`;
 }
 
 export type Sort = "relevance" | "latest";

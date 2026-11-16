@@ -31,14 +31,6 @@ create table if not exists scores (
 alter table profile add column if not exists version bigint not null default 1;
 alter table profile add column if not exists updated_at timestamptz not null default now();
 
--- A starter profile, so a new Signal scores its first stories without waiting for Setup. Saved as
--- if 15 minutes ago, so the owner can change it right away. Never touches a profile already there.
-insert into profile (about, topics, updated_at) values (
-  'I build with AI and want to know what''s new and worth trying: model launches, AI agents, developer tools, how to use AI safely at work, and updates from Vercel and Next.js. Skip the hype; tell me what I could actually use.',
-  '{AI agents,Developer tools,Open-source models,Security,Vercel and Next.js}',
-  now() - interval '15 minutes'
-) on conflict (id) do nothing;
-
 create table if not exists rescore_state (
   id boolean primary key default true check (id),
   version bigint not null default 0,

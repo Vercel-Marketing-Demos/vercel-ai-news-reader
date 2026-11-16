@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       ...["/interests", "/sources", "/your-feed"].map((source) => ({ source, destination: "/setup", permanent: true })),
-      { source: "/how-it-works", destination: "/xray", permanent: true },
+      { source: "/how-it-works", destination: "/setup/how-it-works", permanent: true },
     ];
   },
   turbopack: {

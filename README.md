@@ -90,15 +90,15 @@ flowchart LR
 
 ## After you deploy
 
-1. **Press Visit.** Your Signal starts with a few interests and the main sources on, and scans the news as soon as it's up, so the first stories arrive within minutes.
-2. **Open Setup** to make it yours: say what you care about, in a sentence or two, and pick your sources.
+1. **Press Visit, and tell Signal what you care about.** A new Signal opens on a welcome that asks, in a sentence or two, and offers a few topics to pick. It has already been collecting the news, so your first scored stories arrive within a minute or two.
+2. **Pick your sources** in Setup's Sources tab, if you like. The main ones are already on.
 3. **Build on it.** X-ray's "Make it your own" tab has three feature ideas, each with a prompt for your coding agent.
 
 ### Sharing, and what it costs you
 
 There's no sign-in: anyone with your Signal's link can read it, change Setup and chat with Ask Signal, and **what they do is charged to your Vercel account**. To share Signal, show people the QR code in X-ray's Share tab, so they deploy their own.
 
-Setup shows the AI credits you have left. To cap what your Signal can spend, set an [AI Gateway budget](https://vercel.com/docs/ai-gateway/observability-and-spend/budgets) for the project:
+Setup's How it works tab shows the AI credits you have left. To cap what your Signal can spend, set an [AI Gateway budget](https://vercel.com/docs/ai-gateway/observability-and-spend/budgets) for the project:
 
 ```bash
 vercel ai-gateway budgets set project signal --amount 10 --refresh-period monthly

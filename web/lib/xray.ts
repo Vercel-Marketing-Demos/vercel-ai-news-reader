@@ -94,7 +94,7 @@ export const parts = {
   },
   budgets: {
     name: "AI Gateway budgets",
-    what: "Anyone with a Signal's link can use it, on the Vercel account that deployed it. An AI Gateway budget caps what the project can spend, and Setup shows the credits left. Ask Signal also stops after 30 conversations a day.",
+    what: "Anyone with a Signal's link can use it, on the Vercel account that deployed it. An AI Gateway budget caps what the project can spend, and Setup's How it works tab shows the credits left. Ask Signal also stops after 30 conversations a day.",
     why: "A hard spending limit for one project, set with one command or in the dashboard, with alerts before you reach it.",
     href: "https://vercel.com/docs/ai-gateway/observability-and-spend/budgets",
   },

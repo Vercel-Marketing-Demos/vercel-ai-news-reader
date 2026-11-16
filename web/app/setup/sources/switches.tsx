@@ -4,36 +4,50 @@ import { useState, type CSSProperties } from "react";
 import type { Source } from "@/lib/db";
 import { hue } from "@/lib/hue";
 
-// The sources Signal scans, as rows you switch on and off, with a search across them. Every row
-// stays in the form while hidden by the search, so saving keeps the ones you can't see.
-export function Sources({ sources }: { sources: Source[] }) {
+// The sources Signal scans, as rows you switch on and off, with a search across them. Each switch
+// saves as you flip it (`toggle` is a Server Action), and flips back if the save fails.
+export function SourceSwitches({ sources, toggle }: {
+  sources: Source[];
+  toggle: (name: string, enabled: boolean) => Promise<void>;
+}) {
   const [query, setQuery] = useState("");
   const [on, setOn] = useState(() => new Set(sources.filter((source) => source.enabled).map((source) => source.name)));
   const matches = (source: Source) =>
     `${source.name} ${source.kind} ${site(source.url)}`.toLowerCase().includes(query.trim().toLowerCase());
   const kinds = Map.groupBy(sources, (source) => source.kind);
 
-  function toggle(name: string, checked: boolean) {
-    const next = new Set(on);
-    if (checked) next.add(name);
-    else next.delete(name);
-    setOn(next);
+  function set(name: string, enabled: boolean) {
+    setOn((current) => {
+      const next = new Set(current);
+      if (enabled) next.add(name);
+      else next.delete(name);
+      return next;
+    });
+  }
+
+  async function flip(name: string, enabled: boolean) {
+    set(name, enabled);
+    try {
+      await toggle(name, enabled);
+    } catch {
+      set(name, !enabled);
+    }
   }
 
   return (
-    <section className="mt-10 rounded-xl border border-line">
+    <section className="rounded-xl border border-line">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line p-5">
         <div>
           <h2 className="font-medium">Sources</h2>
           <p className="mt-1 text-sm text-muted">
-            {on.size} of {sources.length} on. New sources show up with the next scan, within 15 minutes.
+            {on.size} of {sources.length} on. Changes save right away; new sources show up with the next scan, within 15
+            minutes.
           </p>
         </div>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => event.key === "Enter" && event.preventDefault()} // don't submit the form
           placeholder="Search sources"
           aria-label="Search sources"
           className="w-full rounded-lg border border-line bg-transparent px-3 py-1.5 text-sm outline-none focus:border-accent sm:w-56"
@@ -58,10 +72,8 @@ export function Sources({ sources }: { sources: Source[] }) {
                   </span>
                   <input
                     type="checkbox"
-                    name="source"
-                    value={source.name}
-                    defaultChecked={source.enabled}
-                    onChange={(event) => toggle(source.name, event.target.checked)}
+                    checked={on.has(source.name)}
+                    onChange={(event) => flip(source.name, event.target.checked)}
                     className="peer sr-only"
                   />
                   {/* A switch: the track turns accent and the knob slides over when it's on. */}
