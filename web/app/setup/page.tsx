@@ -1,11 +1,6 @@
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
-import { getProfile, getSources, saveProfile, setEnabledSources } from "@/lib/db";
+import { getProfile, saveProfile } from "@/lib/db";
 import { requestRescore } from "@/lib/backend";
-import { getCredits } from "@/lib/credits";
-import { parts, type PartName } from "@/lib/xray";
-import { Sources } from "./sources";
-import { ThemeSwitch } from "../theme";
 
 export const metadata = { title: "Setup · Signal" };
 
@@ -22,21 +17,10 @@ const TOPICS = [
   "Robotics",
 ];
 
-// What happens to each story once you've saved, and the part of Vercel behind each step.
-const STEPS: { text: string; part: PartName }[] = [
-  { text: "Every 15 minutes, the scorer scans the sources you turned on and reads each new article.", part: "daemon" },
-  { text: "It saves each article to Postgres.", part: "neon" },
-  { text: "A small embedding model keeps the articles that match your interests, and an LLM scores them and says why they matter.", part: "gateway" },
-  { text: "The feed renders on the server and checks for new scores every 5 seconds.", part: "web" },
-  { text: "When you change your interests, the web app calls the private Python service…", part: "api" },
-  { text: "…which queues a rescore for the scorer to pick up.", part: "queue" },
-];
-
-// Sources apply right away. A change to your interests also rescores recent stories, and those
-// changes are limited to one every 15 minutes, so a sources-only save never waits on that.
+// Saving rescores recent stories, so changes are limited to one every 15 minutes. The first save
+// always goes through: it's what turns on scoring.
 async function save(formData: FormData) {
   "use server";
-  await setEnabledSources(formData.getAll("source").map(String));
   let changed = false;
   try {
     changed = await saveProfile({
@@ -50,24 +34,31 @@ async function save(formData: FormData) {
   redirect("/");
 }
 
-export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
-  await connection(); // read your saved choices at request time, not at build
-  const [profile, sources, credits, { wait }] = await Promise.all([getProfile(), getSources(), getCredits(), searchParams]);
-
+// What you care about, in your own words, and topics to tag it with. On a new Signal this is the
+// first thing you see: nothing is scored until you've written something.
+export default async function InterestsPage({ searchParams }: PageProps<"/setup">) {
+  const [profile, { wait }] = await Promise.all([getProfile(), searchParams]);
+  const welcome = !profile;
   return (
-    <section className="max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Setup</h1>
-      <p className="mt-2 text-muted">What you care about, and where Signal looks for it.</p>
-      <Spend credits={credits} />
+    <>
+      {welcome && (
+        <div className="mb-10">
+          <h1 className="font-serif text-4xl font-medium tracking-tight">Welcome to Signal</h1>
+          <p className="mt-3 max-w-2xl text-muted">
+            Tell it what you care about, and it reads the news for you: every story scored against your own words, with
+            a line on why it matters to you.
+          </p>
+        </div>
+      )}
       {wait && (
-        <p className="mt-4 rounded-lg bg-surface px-4 py-3 text-sm">
-          Your sources are saved. Your interests weren&apos;t: they can change once every 15 minutes.
+        <p className="mb-6 rounded-lg bg-surface px-4 py-3 text-sm">
+          Your interests weren&apos;t saved: they can change once every 15 minutes.
         </p>
       )}
 
-      <form action={save} className="mt-8">
+      <form action={save}>
         <h2 className="font-medium">What do you care about?</h2>
-        <p className="mt-1 text-sm text-muted">Say it in your own words. Signal reads every story with this in mind.</p>
+        <p className="mt-1 text-sm text-muted">Say it in a sentence or two. Signal reads every story with this in mind.</p>
         <textarea
           name="about"
           required
@@ -79,90 +70,24 @@ export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
           className="mt-3 min-h-48 w-full rounded-lg border border-line bg-transparent p-3 leading-relaxed outline-none [field-sizing:content] focus:border-accent"
         />
 
-        <h2 className="mt-8 font-medium">Topics</h2>
+        <h2 className="mt-8 font-medium">
+          Topics{welcome && <span className="font-normal text-muted"> (optional)</span>}
+        </h2>
+        <p className="mt-1 text-sm text-muted">Quick tags that sharpen the scores, label stories, and filter your feed.</p>
         <Chips name="topic" options={TOPICS.map((topic) => [topic, profile?.topics.includes(topic) ?? false])} />
 
-        <Sources sources={sources} />
-
         <button type="submit" className="mt-10 rounded-md bg-accent px-5 py-2.5 font-medium text-background hover:opacity-90">
-          Update my feed
+          {welcome ? "Show my feed" : "Save interests"}
         </button>
       </form>
-
-      {/* Outside the form above: the theme switch is its own form, and applies right away. */}
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
-        <div>
-          <h2 className="font-medium">Appearance</h2>
-          <p className="mt-1 text-sm text-muted">System follows your device. Everyone else sees their own system setting.</p>
-        </div>
-        <ThemeSwitch />
-      </div>
-
-      <h2 className="mt-16 font-medium">How Signal works</h2>
-      <p className="mt-1 text-sm text-muted">
-        One Vercel project: a Next.js app, a private Python API, an always-on Python worker, an AI agent, and a
-        Postgres database, all deployed together from one git push.
-      </p>
-      <ol className="mt-4 space-y-3">
-        {STEPS.map((step, index) => (
-          <li key={index} className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs">
-              {index + 1}
-            </span>
-            <p>
-              {step.text} <span className="text-sm text-accent">{parts[step.part].name}</span>
-            </p>
-          </li>
-        ))}
-      </ol>
-      <a href="/xray" className="mt-6 inline-block text-sm text-accent hover:underline">
-        See every part in X-ray →
-      </a>
-    </section>
-  );
-}
-
-// Anyone with the link can use this Signal, on its owner's Vercel account. Say so, show what's left,
-// and point to the place to cap it: an AI Gateway budget, set where the owner is signed in to Vercel.
-function Spend({ credits }: { credits: Awaited<ReturnType<typeof getCredits>> }) {
-  const project = process.env.VERCEL_PROJECT_ID ?? "your-project";
-  return (
-    <div className="mt-6 rounded-xl border border-line p-5 text-sm">
-      <p className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="font-medium">Your Signal runs on your Vercel account</span>
-        {credits && (
-          <span className="text-muted">
-            AI credits left: <span className="font-semibold text-foreground">${credits.balance.toFixed(2)}</span>
-          </span>
-        )}
-      </p>
-      <p className="mt-2 text-muted">
-        Anyone with this link can read your feed, change Setup and chat with Ask Signal, and what they do is charged
-        to your account. To share Signal, show people the QR code in X-ray&apos;s Share tab so they get their own.
-      </p>
-      <p className="mt-3 text-muted">
-        Cap what it can spend with an{" "}
-        <a
-          href="https://vercel.com/docs/ai-gateway/observability-and-spend/budgets"
-          target="_blank"
-          rel="noreferrer"
-          className="text-foreground underline underline-offset-2"
-        >
-          AI Gateway budget
-        </a>
-        :
-      </p>
-      <code className="mt-2 block overflow-x-auto rounded-md bg-surface px-3 py-2 font-mono text-xs whitespace-nowrap">
-        vercel ai-gateway budgets set project {project} --amount 10 --refresh-period monthly
-      </code>
-    </div>
+    </>
   );
 }
 
 // Checkboxes styled as pills. Each checked one is submitted under `name`.
 function Chips({ name, options }: { name: string; options: [string, boolean][] }) {
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
+    <div className="mt-3 flex flex-wrap gap-2">
       {options.map(([value, checked]) => (
         <label key={value}>
           <input type="checkbox" name={name} value={value} defaultChecked={checked} className="peer sr-only" />

@@ -358,8 +358,8 @@ function OwnSlide() {
 function ShareSlide() {
   const steps = [
     "Press Deploy. Vercel copies the repo into your GitHub account, creates a Vercel project for it, and sets up a Neon database. There's nothing to fill in.",
-    "When the build finishes, press Visit. Your Signal starts with a few interests, so the first stories arrive within minutes.",
-    "Make it yours in Setup: say what you care about and pick your sources. Anyone with your link can use it on your account, so share this QR code instead.",
+    "When the build finishes, press Visit and tell Signal what you care about, in your own words. Your first scored stories arrive within a minute or two.",
+    "Pick your sources in Setup, and you're done. Anyone with your link can use it on your account, so share this QR code instead.",
   ];
   return (
     <div className="page-column grid grid-cols-[minmax(0,1fr)] items-center gap-10 rounded-xl border border-line p-6 sm:p-10 lg:grid-cols-[auto_minmax(0,1fr)]">
