@@ -78,10 +78,11 @@ export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
           name="about"
           required
           maxLength={2000}
-          rows={4}
+          rows={8}
           defaultValue={profile?.about}
           placeholder="I want to use AI to help my team ship faster, and stay on top of new models worth trying."
-          className="mt-3 w-full rounded-lg border border-line bg-transparent p-3 outline-none focus:border-accent"
+          // Starts roomy, and grows with what you write where the browser supports it.
+          className="mt-3 min-h-48 w-full rounded-lg border border-line bg-transparent p-3 leading-relaxed outline-none [field-sizing:content] focus:border-accent"
         />
 
         <h2 className="mt-8 font-medium">Topics</h2>
