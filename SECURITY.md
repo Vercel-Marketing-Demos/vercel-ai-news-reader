@@ -1,44 +1,19 @@
 # Security
 
-## How sign-in works
+## Open by design
 
-Each Signal has one owner, who signs in with `PROFILE_EDIT_KEY`: a randomly generated password of at
-least 32 characters, set as a server-only, sensitive environment variable. Never use a `NEXT_PUBLIC_`
-variable or commit the value. A missing or short key disables sign-in.
+Every Signal belongs to whoever deployed it, and there's no sign-in: anyone with the link can read
+the feed, change Setup and chat with Ask Signal, on the deployer's Vercel account. Setup and the
+README say so. What's guarded is cost, and the platform keeps a Signal private when its owner wants:
 
-- **Sign-in** sets an HttpOnly, Secure, SameSite=Lax cookie holding an HMAC of a fixed label, keyed by
-  the key, for 30 days. It proves you know the key without containing it, and changing the key signs
-  every browser out.
-- **Private by default.** Unless the `public-access` flag is on, every page (`web/proxy.ts`) and Ask
-  Signal (`agent/channels/eve.ts`) need that cookie. The flag defaults to off, so a new deployment, or
-  one that can't reach Vercel Flags, stays private.
-- **Owner-only either way.** Setup and Follow-ups, and the Server Actions that change them, check
-  the cookie again at the data layer (`web/lib/db.ts`), since Server Actions are public endpoints.
-- **After sign-in** you return to the page you came from, but only to a path on this site
-  (`web/lib/return-path.ts`, with tests).
-- **Ask Signal** caps what each conversation can spend (`agent/agent.ts`), since a shared Signal lets
-  anyone chat on the owner's AI Gateway credits.
-
-To set the key on an existing project, enter it yourself at the prompt:
-
-```sh
-vercel env add PROFILE_EDIT_KEY --environment production --sensitive
-```
-
-## Profile-derived feed topics
-
-`scores.topics` contains exact matches from the owner's saved interests, not public
-article classifications. The feed data functions check owner credentials on every
-request: anonymous visitors receive no topic labels or topic filter choices, and
-supplied topic filters are ignored so they cannot probe saved selections. The
-anonymous guide's `list_feed` tool never selects this column. All / No match filters,
-scores, and explanations remain public. The authenticated owner can still see and
-filter by matched topics. No migration or rescore is needed to protect existing rows.
-Deployments still running the old code remain exposed until replaced or removed.
+- **An AI Gateway budget** caps the project's AI spend; Setup shows the credits left and the command.
+- **Ask Signal** stops each conversation at $0.50 (`agent/agent.ts`), and starts at most 30 a day
+  (`agent/channels/eve.ts`, counted atomically in `chat_days`).
+- **Interest changes**, which rescore recent stories, are limited as below.
+- **Vercel Authentication** or Password Protection can put the whole deployment behind a login.
 
 ## Rescore admission and spending bounds
 
-- Profile writes require owner authorization, including direct Server Action calls.
 - Trimmed, validated profiles with sorted/deduplicated topics are compared atomically
   in PostgreSQL. Unchanged saves preserve scores and send no queue message. Changed
   profiles are admitted at most once every 15 minutes across web instances; earlier

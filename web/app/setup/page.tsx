@@ -1,9 +1,8 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getProfile, getSources, saveProfile, setEnabledSources } from "@/lib/db";
-import { OWNER_COOKIE } from "@/lib/profile-owner";
 import { requestRescore } from "@/lib/backend";
+import { getCredits } from "@/lib/credits";
 import { parts, type PartName } from "@/lib/xray";
 import { Sources } from "./sources";
 import { ThemeSwitch } from "../theme";
@@ -51,20 +50,15 @@ async function save(formData: FormData) {
   redirect("/");
 }
 
-async function signOut() {
-  "use server";
-  (await cookies()).delete(OWNER_COOKIE);
-  redirect("/");
-}
-
 export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
   await connection(); // read your saved choices at request time, not at build
-  const [profile, sources, { wait }] = await Promise.all([getProfile(), getSources(), searchParams]);
+  const [profile, sources, credits, { wait }] = await Promise.all([getProfile(), getSources(), getCredits(), searchParams]);
 
   return (
     <section className="max-w-3xl">
       <h1 className="text-2xl font-semibold tracking-tight">Setup</h1>
       <p className="mt-2 text-muted">What you care about, and where Signal looks for it.</p>
+      <Spend credits={credits} />
       {wait && (
         <p className="mt-4 rounded-lg bg-surface px-4 py-3 text-sm">
           Your sources are saved. Your interests weren&apos;t: they can change once every 15 minutes.
@@ -104,10 +98,6 @@ export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
         <ThemeSwitch />
       </div>
 
-      <form action={signOut} className="mt-6">
-        <button className="text-sm text-muted hover:text-foreground">Sign out</button>
-      </form>
-
       <h2 className="mt-16 font-medium">How Signal works</h2>
       <p className="mt-1 text-sm text-muted">
         One Vercel project: a Next.js app, a private Python API, an always-on Python worker, an AI agent, and a
@@ -129,6 +119,43 @@ export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
         See every part in X-ray →
       </a>
     </section>
+  );
+}
+
+// Anyone with the link can use this Signal, on its owner's Vercel account. Say so, show what's left,
+// and point to the place to cap it: an AI Gateway budget, set where the owner is signed in to Vercel.
+function Spend({ credits }: { credits: Awaited<ReturnType<typeof getCredits>> }) {
+  const project = process.env.VERCEL_PROJECT_ID ?? "your-project";
+  return (
+    <div className="mt-6 rounded-xl border border-line p-5 text-sm">
+      <p className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="font-medium">Your Signal runs on your Vercel account</span>
+        {credits && (
+          <span className="text-muted">
+            AI credits left: <span className="font-semibold text-foreground">${credits.balance.toFixed(2)}</span>
+          </span>
+        )}
+      </p>
+      <p className="mt-2 text-muted">
+        Anyone with this link can read your feed, change Setup and chat with Ask Signal, and what they do is charged
+        to your account. To share Signal, show people the QR code in X-ray&apos;s Share tab so they get their own.
+      </p>
+      <p className="mt-3 text-muted">
+        Cap what it can spend with an{" "}
+        <a
+          href="https://vercel.com/docs/ai-gateway/observability-and-spend/budgets"
+          target="_blank"
+          rel="noreferrer"
+          className="text-foreground underline underline-offset-2"
+        >
+          AI Gateway budget
+        </a>
+        :
+      </p>
+      <code className="mt-2 block overflow-x-auto rounded-md bg-surface px-3 py-2 font-mono text-xs whitespace-nowrap">
+        vercel ai-gateway budgets set project {project} --amount 10 --refresh-period monthly
+      </code>
+    </div>
   );
 }
 

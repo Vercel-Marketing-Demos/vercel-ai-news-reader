@@ -92,35 +92,33 @@ export const parts = {
     why: "Review the real thing before it ships. Merge it and production updates.",
     href: "https://vercel.com/docs/deployments/preview-deployments",
   },
-  env: {
-    name: "Environment variables",
-    what: "PROFILE_EDIT_KEY is Signal's password: a sensitive environment variable that only the server can read. Whoever knows it owns this Signal.",
-    why: "Secrets live in the project, encrypted and set per environment, never in the code.",
-    href: "https://vercel.com/docs/environment-variables/sensitive-environment-variables",
+  budgets: {
+    name: "AI Gateway budgets",
+    what: "Anyone with a Signal's link can use it, on the Vercel account that deployed it. An AI Gateway budget caps what the project can spend, and Setup shows the credits left. Ask Signal also stops after 30 conversations a day.",
+    why: "A hard spending limit for one project, set with one command or in the dashboard, with alerts before you reach it.",
+    href: "https://vercel.com/docs/ai-gateway/observability-and-spend/budgets",
   },
   flags: {
     name: "Vercel Flags",
-    what: "Signal is private until you turn on its public-access flag, which shares it with anyone who has the link. Follow-ups are a flag too.",
+    what: "Follow-ups sit behind a flag: turn it on in the dashboard and the tab appears, with no redeploy.",
     why: "Ship features dark, open them to whoever you choose, and turn them off in seconds, with no redeploy.",
     href: "https://vercel.com/docs/flags",
   },
   protection: {
     name: "Deployment Protection",
-    what: "For a Signal on a team, Vercel Authentication or Password Protection can stand in front of the whole app, before any page loads.",
+    what: "Signal has no sign-in of its own. To keep yours to yourself or your team, Vercel Authentication or Password Protection can stand in front of the whole app, before any page loads.",
     why: "Lock previews or production to your team in one setting, with no code.",
     href: "https://vercel.com/docs/deployment-protection",
   },
 } satisfies Record<string, Part>;
 
-// The repo, and a link that copies it into your GitHub and deploys it as a new Vercel project, with a
-// Neon database and a prompt for your PROFILE_EDIT_KEY. The README's Deploy button is the same link.
+// The repo, and a link that copies it into your GitHub and deploys it as a new Vercel project with a
+// Neon database. Nothing to fill in. The README's Deploy button is the same link.
 export const REPO = "https://github.com/buildswithcoffee/vercel-ai-news-reader";
 export const DEPLOY = `https://vercel.com/new/clone?${new URLSearchParams({
   "repository-url": REPO,
   "project-name": "signal",
   "repository-name": "signal",
-  env: "PROFILE_EDIT_KEY",
-  envDescription: "Your owner key: any password of 32+ characters. You'll use it to sign in to your Signal.",
   stores: JSON.stringify([{ type: "integration", integrationSlug: "neon", productSlug: "neon", protocol: "storage" }]),
 })}`;
 

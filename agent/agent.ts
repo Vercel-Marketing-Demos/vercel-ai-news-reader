@@ -6,7 +6,8 @@ export default defineAgent({
   // and the stories in your feed.
   defaultTools: false,
   limits: {
-    // When Signal is public, anyone can chat with the guide, so cap what a single conversation can spend.
+    // Anyone with the link can chat, so cap what one conversation can spend. channels/eve.ts caps how
+    // many start each day.
     sessionUsage: ({ total }) => (total.costUsd ?? 0) >= 0.5,
   },
 });

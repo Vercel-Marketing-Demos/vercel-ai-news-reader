@@ -172,6 +172,9 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.2.0
         version: 1.2.0
+      '@vercel/oidc':
+        specifier: 4.0.7
+        version: 4.0.7
       eve:
         specifier: 1.0.0-rc.6
         version: 1.0.0-rc.6(ai@7.0.163(zod@4.6.7))(next@16.4.3(@babel/core@7.29.13(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)

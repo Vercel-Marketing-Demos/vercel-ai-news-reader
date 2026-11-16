@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
-import { getFeed, getFeedTopics, getProfile, isOwner, type Sort } from "@/lib/db";
+import { getFeed, getFeedTopics, getProfile, type Sort } from "@/lib/db";
 import { followUpsFlag } from "@/flags";
 import { AutoRefresh } from "./auto-refresh";
 import { Story, type StorySize } from "./story";
@@ -32,7 +32,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/">) {
     { value: "no-match", label: "No match" },
   ];
   const filter = filters.find(({ value }) => value === params.filter)?.value ?? null;
-  const [feed, followUps] = await Promise.all([getFeed(sort, filter), canFollowUp()]);
+  const [feed, followUps] = await Promise.all([getFeed(sort, filter), followUpsFlag()]);
   // Ranked by relevance, the feed is laid out like a front page. Latest, and No match, are plain lists.
   const front = sort === "relevance" && filter !== "no-match";
 
@@ -83,9 +83,4 @@ export default async function FeedPage({ searchParams }: PageProps<"/">) {
 // The top story leads, the next two are cards, and the rest are rows.
 function frontPage(index: number): StorySize {
   return index === 0 ? "lead" : index < 3 ? "card" : "row";
-}
-
-// Follow-ups are behind a flag, and only the owner has them.
-async function canFollowUp() {
-  return (await isOwner()) && (await followUpsFlag());
 }

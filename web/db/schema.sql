@@ -31,6 +31,14 @@ create table if not exists scores (
 alter table profile add column if not exists version bigint not null default 1;
 alter table profile add column if not exists updated_at timestamptz not null default now();
 
+-- A starter profile, so a new Signal scores its first stories without waiting for Setup. Saved as
+-- if 15 minutes ago, so the owner can change it right away. Never touches a profile already there.
+insert into profile (about, topics, updated_at) values (
+  'I build with AI and want to know what''s new and worth trying: model launches, AI agents, developer tools, how to use AI safely at work, and updates from Vercel and Next.js. Skip the hype; tell me what I could actually use.',
+  '{AI agents,Developer tools,Open-source models,Security,Vercel and Next.js}',
+  now() - interval '15 minutes'
+) on conflict (id) do nothing;
+
 create table if not exists rescore_state (
   id boolean primary key default true check (id),
   version bigint not null default 0,
@@ -63,7 +71,7 @@ insert into feeds (name, kind, url, enabled) values
   ('AWS re:Invent',          'Platforms', 'https://aws.amazon.com/blogs/aws/category/events/reinvent/feed/',     true),
   ('NVIDIA',                 'Platforms', 'https://blogs.nvidia.com/feed/',                                      false),
   ('GitHub',                 'Platforms', 'https://github.blog/feed/',                                           false),
-  ('Next.js',                'Platforms', 'https://nextjs.org/feed.xml',                                         false),
+  ('Next.js',                'Platforms', 'https://nextjs.org/feed.xml',                                         true),
   ('AWS Machine Learning',   'Platforms', 'https://aws.amazon.com/blogs/machine-learning/feed/',                 false),
   ('Meta Engineering',       'Platforms', 'https://engineering.fb.com/feed/',                                    false),
   ('Databricks',             'Platforms', 'https://www.databricks.com/feed',                                     false),
@@ -106,3 +114,9 @@ where read_at is null and read_attempts = 0 and (image is not null or descriptio
 -- For a story Signal only has the headline of, another source's readable story about the same news.
 -- Signal interprets the story from that coverage, links both, and hides the coverage as a duplicate.
 alter table articles add column if not exists covered_by text references articles (id) on delete set null;
+
+-- How many Ask Signal conversations started each day, to cap them (agent/channels/eve.ts).
+create table if not exists chat_days (
+  day           date primary key,
+  conversations integer not null default 0
+);

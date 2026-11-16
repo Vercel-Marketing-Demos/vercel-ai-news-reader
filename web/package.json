@@ -7,12 +7,12 @@
     "build": "node scripts/migrate.mjs && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test lib/*.test.ts",
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
     "@flags-sdk/vercel": "^1.6.0",
     "@neondatabase/serverless": "^1.2.0",
+    "@vercel/oidc": "4.0.7",
     "eve": "1.0.0-rc.6",
     "flags": "^4.4.0",
     "next": "16.4.3",
