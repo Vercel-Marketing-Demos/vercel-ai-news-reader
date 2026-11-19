@@ -41,7 +41,12 @@ export function Slides({ titles, children }: { titles: string[]; children: React
       </div>
       <div ref={track} className="mt-6 flex snap-x snap-mandatory items-start overflow-x-auto [scrollbar-width:none]">
         {Children.map(children, (slide, index) => (
-          <section data-active={index === active || undefined} className="w-full shrink-0 snap-start">
+          // Slides sit side by side, so the row is as tall as its tallest slide. The ones not in view are
+          // held to a screen's height, so a long slide doesn't leave the short ones trailing blank space.
+          <section
+            data-active={index === active || undefined}
+            className="w-full shrink-0 snap-start not-data-active:max-h-svh not-data-active:overflow-hidden"
+          >
             {slide}
           </section>
         ))}
