@@ -13,7 +13,7 @@
   --accent: var(--foreground);
 }
 
-/* Without a choice, follow the system. A choice from the theme switch pins one. */
+/* Signal is light unless you pick Dark, or System to follow your device. */
 :root[data-theme="light"] {
   color-scheme: light;
 }
