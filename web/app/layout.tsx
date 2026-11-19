@@ -37,7 +37,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Guide>
-        <header className="border-b border-line">
+        {/* Stays at the top as you scroll, over a translucent wash of the page. */}
+        <header className="sticky top-0 z-40 border-b border-line bg-background/85 backdrop-blur">
           <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-medium tracking-tight">
               <Mark />
@@ -45,10 +46,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <nav className="flex gap-4 text-sm text-muted">
               <Link href="/" className="hover:text-foreground">Feed</Link>
-              <Link href="/setup" className="hover:text-foreground">Setup</Link>
               <FollowUpsLink />
             </nav>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-4">
+              <Link href="/setup" className="text-sm text-muted hover:text-foreground">
+                Setup
+              </Link>
               <Link
                 href="/xray"
                 className="rounded-full border border-accent px-3 py-1 text-xs text-accent hover:bg-accent hover:text-background"
